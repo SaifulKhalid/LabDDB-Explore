@@ -3,10 +3,11 @@ import { useAuth } from '../context/AuthContext';
 import { BangladeshMap } from '../components/Map/BangladeshMap';
 import { Stats } from '../components/Dashboard/Stats';
 import { DistrictModal } from '../components/Modals/DistrictModal';
-import { DISTRICTS } from '../constants/districts';
+import { DISTRICTS, DIVISIONS } from '../constants/districts';
 import { DistrictInfo, DistrictData } from '../types';
-import { LogOut, User as UserIcon, Share2, Map as MapIcon, LayoutDashboard } from 'lucide-react';
+import { LogOut, User as UserIcon, Share2, Map as MapIcon, LayoutDashboard, Info } from 'lucide-react';
 import confetti from 'canvas-confetti';
+import { cn } from '../lib/utils';
 
 export default function Dashboard() {
   const { userData, logout } = useAuth();
@@ -43,83 +44,112 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-white flex flex-col md:flex-row">
-      {/* Sidebar - Desktop */}
-      <aside className="hidden md:flex w-72 border-r border-gray-100 p-8 flex-col fixed h-full">
-        <div className="mb-12">
-          <h1 className="text-xl font-black text-gray-900 tracking-tighter">LabDDB<br/><span className="text-emerald-500">Explore BD</span></h1>
+    <div className="h-screen bg-white flex flex-col overflow-hidden">
+      {/* Top Header - HDX Style */}
+      <header className="h-16 border-b border-slate-100 flex items-center justify-between px-6 md:px-12 shrink-0 z-50 bg-white">
+        <div className="flex items-center gap-8">
+          <h1 className="text-xl font-black text-slate-900 tracking-tighter flex items-center gap-2">
+            <div className="w-8 h-8 bg-emerald-500 rounded-lg flex items-center justify-center rotate-3">
+              <MapIcon className="text-white" size={18} />
+            </div>
+            <span>LabDDB <span className="text-emerald-500">Explore</span></span>
+          </h1>
+          
+          <nav className="hidden md:flex items-center gap-1">
+            <button className="px-4 py-2 text-sm font-bold text-emerald-600 bg-emerald-50 rounded-xl">Dashboard</button>
+            <button onClick={handleShare} className="px-4 py-2 text-sm font-bold text-slate-400 hover:text-slate-600 transition-colors">Share Journey</button>
+          </nav>
         </div>
 
-        <nav className="flex-1 space-y-2">
-          <button className="w-full flex items-center gap-3 p-3 bg-emerald-50 text-emerald-600 rounded-xl font-bold text-sm">
-            <LayoutDashboard size={18} /> Dashboard
-          </button>
-          <button onClick={handleShare} className="w-full flex items-center gap-3 p-3 text-gray-500 hover:bg-gray-50 rounded-xl font-bold text-sm transition-colors">
-            <Share2 size={18} /> Share Profile
-          </button>
-        </nav>
-
-        <div className="mt-auto pt-8 border-t border-gray-100">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-400">
-              <UserIcon size={20} />
-            </div>
-            <div className="overflow-hidden">
-              <p className="text-sm font-bold text-gray-900 truncate">{userData.name}</p>
-              <p className="text-xs text-gray-400 truncate">{userData.email}</p>
-            </div>
+        <div className="flex items-center gap-4">
+          <div className="hidden md:flex flex-col items-end">
+            <p className="text-xs font-bold text-slate-900 leading-none mb-1">{userData.name}</p>
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{userData.email}</p>
           </div>
           <button 
             onClick={logout}
-            className="w-full flex items-center gap-3 p-3 text-red-500 hover:bg-red-50 rounded-xl font-bold text-sm transition-colors"
+            className="p-2.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all"
+            title="Logout"
           >
-            <LogOut size={18} /> Logout
+            <LogOut size={20} />
           </button>
         </div>
-      </aside>
+      </header>
 
-      {/* Main Content */}
-      <main className="flex-1 md:ml-72 p-6 md:p-12 pb-24 md:pb-12">
-        <header className="md:hidden flex justify-between items-center mb-8">
-          <h1 className="text-lg font-black text-gray-900 tracking-tighter">LabDDB <span className="text-emerald-500">BD</span></h1>
-          <button onClick={logout} className="p-2 text-gray-400"><LogOut size={20} /></button>
-        </header>
+      <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
+        {/* Left: Map Area - Large and Immersive */}
+        <main className="flex-1 relative bg-[#f8fafc] p-4 md:p-8">
+          <BangladeshMap 
+            districts={userData.districts} 
+            onDistrictClick={handleDistrictClick} 
+          />
+        </main>
 
-        <div className="max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12">
-          {/* Left Column: Map */}
-          <section className="space-y-6">
-            <div>
-              <h2 className="text-2xl font-black text-gray-900 mb-1">Your Journey</h2>
-              <p className="text-sm text-gray-400">Tap on a district to mark your progress.</p>
-            </div>
-            <BangladeshMap 
-              districts={userData.districts} 
-              onDistrictClick={handleDistrictClick} 
-            />
-          </section>
+        {/* Right: Sidebar - Data & Stats */}
+        <aside className="w-full md:w-[450px] border-l border-slate-100 bg-white overflow-y-auto shrink-0 flex flex-col">
+          <div className="p-8 space-y-10 flex-1">
+            <section>
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-black text-slate-900">Your Progress</h2>
+                <div className="bg-emerald-50 text-emerald-600 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest">
+                  Active Journey
+                </div>
+              </div>
+              <Stats districts={userData.districts} />
+            </section>
 
-          {/* Right Column: Stats */}
-          <section className="space-y-6">
-            <div>
-              <h2 className="text-2xl font-black text-gray-900 mb-1">Stats & Badges</h2>
-              <p className="text-sm text-gray-400">Unlock division badges by visiting all districts.</p>
-            </div>
-            <Stats districts={userData.districts} />
-          </section>
-        </div>
-      </main>
+            <div className="h-px bg-slate-50 w-full" />
 
-      {/* Bottom Nav - Mobile */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 p-4 flex justify-around items-center z-40">
+            <section>
+              <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-6 flex items-center gap-2">
+                <LayoutDashboard size={14} className="text-slate-300" /> District Directory
+              </h3>
+              
+              <div className="space-y-2">
+                {DIVISIONS.map(division => (
+                  <div key={division} className="space-y-2">
+                    <h4 className="text-[10px] font-bold text-slate-400 uppercase bg-slate-50 px-3 py-1.5 rounded-lg inline-block">
+                      {division}
+                    </h4>
+                    <div className="grid grid-cols-1 gap-1 pl-1">
+                      {DISTRICTS.filter(d => d.division === division).map(district => {
+                        const status = userData.districts[district.id]?.status || 'notVisited';
+                        return (
+                          <button
+                            key={district.id}
+                            onClick={() => handleDistrictClick(district.id)}
+                            className="flex items-center justify-between p-2.5 hover:bg-slate-50 rounded-xl transition-all group text-left"
+                          >
+                            <span className="text-sm font-bold text-slate-700 group-hover:text-slate-900">{district.name}</span>
+                            <div className={cn(
+                              "w-2 h-2 rounded-full",
+                              status === 'visited' ? "bg-emerald-500" :
+                              status === 'lived' ? "bg-blue-500" :
+                              status === 'wishlist' ? "bg-amber-400" : "bg-slate-200"
+                            )} />
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+          </div>
+        </aside>
+      </div>
+
+      {/* Bottom Nav - Mobile Only */}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-100 p-4 flex justify-around items-center z-40">
         <button className="flex flex-col items-center gap-1 text-emerald-500">
           <LayoutDashboard size={20} />
-          <span className="text-[10px] font-bold uppercase">Home</span>
+          <span className="text-[10px] font-bold uppercase">Map</span>
         </button>
-        <button onClick={handleShare} className="flex flex-col items-center gap-1 text-gray-400">
+        <button onClick={handleShare} className="flex flex-col items-center gap-1 text-slate-400">
           <Share2 size={20} />
           <span className="text-[10px] font-bold uppercase">Share</span>
         </button>
-        <button onClick={() => window.location.href = `/u/${userData.username}`} className="flex flex-col items-center gap-1 text-gray-400">
+        <button onClick={() => window.location.href = `/u/${userData.username}`} className="flex flex-col items-center gap-1 text-slate-400">
           <UserIcon size={20} />
           <span className="text-[10px] font-bold uppercase">Profile</span>
         </button>
